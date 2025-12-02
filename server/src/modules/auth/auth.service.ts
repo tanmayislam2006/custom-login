@@ -26,11 +26,26 @@ const registerUser = async (userInfo: Record<string, unknown>) => {
   });
   await pool.query(
     `INSERT INTO refreshTokens(token,user_id) VALUES($1,$2) RETURNING *`,
-    [ refreshToken,user.id]
+    [refreshToken, user.id]
   );
 
   return { user, accessToken, refreshToken };
 };
+const loginUser = async (email: string, password: string) => {
+  const result = await pool.query(`SELECT * FROM users WHERE email=$1`, [
+    email,
+  ]);
+  if (result.rows.length === 0) {
+    return null;
+  }
+  const userInfoInDb = result.rows[0];
+  const passWordMatch = await bcrypt.compare(password, userInfoInDb.password);
+  if (!passWordMatch) {
+    return false;
+  }
+};
 export const authService = {
   registerUser,
+  loginUser,
 };
+
