@@ -3,18 +3,12 @@ import { authService } from "./auth.service";
 
 const register = async (req: Request, res: Response) => {
   try {
-    const { user, accessToken, refreshToken } = await authService.registerUser(
-      req.body
-    );
+    const result = await authService.registerUser(req.body);
 
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      data: {
-        user,
-        accessToken,
-        refreshToken,
-      },
+      data: { ...result },
     });
   } catch (error: any) {
     res.status(400).json({
@@ -26,9 +20,12 @@ const register = async (req: Request, res: Response) => {
 const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   try {
-    const result =await authService.loginUser(email,password)
+    const result = await authService.loginUser(email, password);
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
     console.log(result);
-    res.send(result)
   } catch (error: any) {
     res.status(500).json({
       success: false,
