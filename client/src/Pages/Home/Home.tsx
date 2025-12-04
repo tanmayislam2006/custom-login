@@ -1,11 +1,10 @@
-import React, { use } from 'react';
-import SmartBillContext from '../../Context/SmartBillContext';
+import React from 'react';
+import { useSmartBill } from '../../Context/SmartBillContext';
 import { Link } from 'react-router';
 import Hero from './Hero';
 
-
 const Home = () => {
-    const { fireBaseUser } = use(SmartBillContext);
+    const { user } = useSmartBill();
 
     return (
         <div className="min-h-[80vh] bg-gray-50 flex flex-col items-center justify-center px-4">
@@ -27,7 +26,7 @@ const Home = () => {
                     Create New Bill
                 </Link>
                 <Link
-                    to={fireBaseUser ? `/mybill/${fireBaseUser.uid}` : "/login"}
+                    to={user ? `/mybill/${user.id}` : "/login"}
                     className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
                 >
                     View My Bills

@@ -2,12 +2,23 @@ import React, { useState } from "react";
 import { Link, useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import useAxiosSecure from "../../Utility/AxiosInseptor/AxiosInseptor";
+
+interface Bill {
+  _id: string;
+  bill_type: string;
+  organization: string;
+  amount: number;
+  due_date: string;
+}
 
 const BillPage = () => {
-  const initialBillData = useLoaderData();
-  const [allBillData, setAllBillData] = useState(initialBillData);
-  const handleDeleteBill = (id) => {
-    // delte also db
+  const initialBillData = useLoaderData() as Bill[];
+  const [allBillData, setAllBillData] = useState<Bill[]>(initialBillData);
+  const axiosSecure = useAxiosSecure();
+
+  const handleDeleteBill = (id: string) => {
+    // delete also db
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -18,18 +29,16 @@ const BillPage = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch(`http://localhost:4000/bill/${id}`, {
-          method:"DELETE"
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.deletedCount) {
+        axiosSecure.delete(`/bill/${id}`)
+          .then((res) => {
+            if (res.data.deletedCount || res.data.success) {
               toast.success("Bill deleted successfully");
             }
-          });
+          })
+          .catch(err => toast.error("Failed to delete bill"));
+
         const remainingBills = allBillData.filter((bill) => bill._id !== id);
         setAllBillData(remainingBills);
-
       }
     });
   };
