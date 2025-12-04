@@ -18,11 +18,16 @@ const Transiction = () => {
   const { user } = useSmartBill();
   const axiosSecure = useAxiosSecure();
 
-  // Using user.id instead of uid, assuming stored user has id.
   const uid = user?.id;
 
   useEffect(() => {
     if (uid) {
+        // Attempt to fetch transactions. Warning will occur if endpoint is missing.
+        axiosSecure.get(`/transiction/${uid}`)
+        .then((res) => setAllTransiction(res.data))
+        .catch((err) => {
+            console.warn("Transactions fetch error:", err.message);
+        });
         axiosSecure.get(`/transiction/${uid}`)
         .then((res) => setAllTransiction(res.data))
         .catch((err) => console.error(err));

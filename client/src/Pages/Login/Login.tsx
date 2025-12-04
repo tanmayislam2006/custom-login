@@ -20,6 +20,7 @@ const Login = () => {
             toast.success("Log In successfully");
         }
       })
+      .catch((err) => console.error(err));
       .catch((err) => console.log(err));
   };
 
@@ -39,9 +40,11 @@ const Login = () => {
         // The provider now handles local storage
         if (result && result.success) {
           toast.success("Log In successfully");
+        } else {
+             toast.error("Log In failed")
           // No need for extra fetch here if backend login handles everything
         } else {
-             toast.success("Log In successfully");
+             toast.success("Log In successfully")
         }
       })
       .catch((err) => {

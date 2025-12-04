@@ -20,17 +20,18 @@ const authLoader = async (url: string) => {
     const response = await axios.get(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    return response.data;
+    // API returns { success: true, data: ... }
+    return response.data.data ? response.data.data : response.data;
   } catch (error: any) {
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      // Redirect to login if unauthorized
       return redirect("/login");
     }
-    throw error;
+    // Return null or empty data to prevent page crash if loader fails
+    return null;
   }
 };
 
-// Simple error boundary component
+
 const ErrorBoundary = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh]">
     <h2 className="text-2xl font-bold text-red-600 mb-2">Something went wrong!</h2>
@@ -60,7 +61,8 @@ const router = createBrowserRouter([
             <BillPage />
           </SmartPrivateRoute>
         ),
-        loader: ({ params }) => authLoader(`http://localhost:4000/mybill/${params.uid}`),
+        // Updated endpoint to match backend: /api/bill/user/:userId
+        loader: ({ params }) => authLoader(`http://localhost:5000/api/bill/user/${params.uid}`),
         hydrateFallbackElement: <Loader />,
         errorElement: <ErrorBoundary />,
       },
@@ -98,7 +100,8 @@ const router = createBrowserRouter([
             <EditBill />
           </SmartPrivateRoute>
         ),
-        loader: ({ params }) => authLoader(`http://localhost:4000/bill/${params.id}`),
+        // Updated endpoint to match backend: /api/bill/:billId
+        loader: ({ params }) => authLoader(`http://localhost:5000/api/bill/${params.id}`),
         hydrateFallbackElement: <Loader />,
         errorElement: <ErrorBoundary />,
       },

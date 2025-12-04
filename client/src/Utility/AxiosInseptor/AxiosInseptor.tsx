@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo } from "react";
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import SmartBillContext, { AuthContextType } from "../../Context/SmartBillContext";
+import SmartBillContext from "../../Context/SmartBillContext";
 
 const useAxiosSecure = (): AxiosInstance => {
   // Get user objects and logOut function from your context
@@ -15,7 +15,7 @@ const useAxiosSecure = (): AxiosInstance => {
   // Memoize the axios instance so it's only created once
   const axiosSecure = useMemo(() => {
     return axios.create({
-      baseURL: "http://localhost:4000",
+      baseURL: "http://localhost:5000",
     });
   }, []);
 

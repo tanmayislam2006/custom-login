@@ -13,12 +13,16 @@ interface Bill {
 }
 
 const BillPage = () => {
-  const initialBillData = useLoaderData() as Bill[];
+  // authLoader returns response.data, which is array of bills if success
+  // or checks structure: backend returns {success: true, data: [...]}
+  // The authLoader strips the wrapper if it can, but let's be safe.
+  const loaderData = useLoaderData() as any;
+  // If loader returns null on error
+  const initialBillData = Array.isArray(loaderData) ? loaderData : (loaderData?.data || []);
   const [allBillData, setAllBillData] = useState<Bill[]>(initialBillData);
   const axiosSecure = useAxiosSecure();
 
   const handleDeleteBill = (id: string) => {
-    // delete also db
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -29,16 +33,21 @@ const BillPage = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
-        axiosSecure.delete(`/bill/${id}`)
+        // Endpoint: /api/bill/:billId
+        axiosSecure.delete(`/api/bill/${id}`)
           .then((res) => {
-            if (res.data.deletedCount || res.data.success) {
+            if (res.data.success) {
               toast.success("Bill deleted successfully");
+              const remainingBills = allBillData.filter((bill) => bill._id !== id);
+              setAllBillData(remainingBills);
+            } else {
+                toast.error("Failed to delete bill");
             }
           })
-          .catch(err => toast.error("Failed to delete bill"));
-
-        const remainingBills = allBillData.filter((bill) => bill._id !== id);
-        setAllBillData(remainingBills);
+          .catch(err => {
+              console.error(err);
+              toast.error("Failed to delete bill");
+          });
       }
     });
   };

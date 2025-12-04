@@ -18,7 +18,7 @@ const SmartBillProvider: React.FC<SmartBillProviderProps> = ({ children }) => {
   const createAccount = async (userInfo: any) => {
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:4000/auth/register", userInfo);
+      const response = await axios.post("http://localhost:5000/auth/register", userInfo);
       setLoading(false);
       return response.data;
     } catch (error) {
@@ -30,7 +30,7 @@ const SmartBillProvider: React.FC<SmartBillProviderProps> = ({ children }) => {
   const logInAccount = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:4000/auth/login", { email, password });
+      const response = await axios.post("http://localhost:5000/auth/login", { email, password });
       const { data } = response.data;
 
       // Store token and user info

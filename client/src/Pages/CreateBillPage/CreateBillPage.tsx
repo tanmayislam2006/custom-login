@@ -61,14 +61,17 @@ const CreateBillPage = () => {
       uid: user?.id,
     };
 
-    // Using axiosSecure for authenticated request
-    axiosSecure.post("/createdbill", createdBill)
+    // Updated endpoint to /api/bill/create
+    axiosSecure.post("/api/bill/create", createdBill)
       .then((res) => {
-        if (res.data.insertedId || res.data.success) {
+        if (res.data.success) {
           toast.success("Bill created successfully");
         }
       })
-      .catch(err => toast.error("Failed to create bill"));
+      .catch(err => {
+          console.error(err);
+          toast.error("Failed to create bill");
+      });
 
     setForm({
       bill_type: "",

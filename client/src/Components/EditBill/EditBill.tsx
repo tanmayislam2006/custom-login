@@ -12,6 +12,8 @@ interface Bill {
 }
 
 const EditBill = () => {
+  const loaderData = useLoaderData() as any;
+  const bill = (loaderData?.data || loaderData) as Bill;
   const bill = useLoaderData() as Bill;
   const axiosSecure = useAxiosSecure();
 
@@ -20,22 +22,22 @@ const EditBill = () => {
     const formData = new FormData(e.currentTarget);
     const updatedBill = Object.fromEntries(formData.entries());
 
-    axiosSecure.patch(`/editbill/${bill._id}`, updatedBill)
+    // Endpoint: /api/bill/:billId
+    axiosSecure.put(`/api/bill/${bill._id}`, updatedBill)
       .then((res) => {
-        if (res.data.modifiedCount || res.data.success) {
+        if (res.data.success) {
           toast.success("Bill updated successfully");
         } else {
-            // It might fail if no changes were made
-            if(res.data.matchedCount) {
-                 toast.info("No changes made");
-            } else {
-                 toast.error("Failed to update bill");
-            }
+             toast.error("Failed to update bill");
         }
       })
-      .catch(err => toast.error("Failed to update bill"));
+      .catch(err => {
+          console.error(err);
+          toast.error("Failed to update bill");
+      });
   };
 
+  if (!bill) return <div>Loading...</div>;
   return (
     <div className="max-w-md mx-auto mt-12 bg-white rounded-xl shadow-lg p-8">
       <h2 className="text-2xl font-bold text-center mb-6 text-blue-700">

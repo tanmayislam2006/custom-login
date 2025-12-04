@@ -13,7 +13,7 @@ const Register = () => {
   const handleGoogleLogin = () => {
     googleLogIn()
       .then((result) => console.log(result))
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
   };
 
   const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -63,8 +63,6 @@ const Register = () => {
     try {
         const result = await createAccount(userInfo);
         toast.success(`Account create successfully`);
-        // The provider's createAccount calls /auth/register
-        // We don't need another fetch call here as `createAccount` already does it.
         navigate("/login");
     } catch (err: any) {
         toast.error(err.response?.data?.message || err.message);

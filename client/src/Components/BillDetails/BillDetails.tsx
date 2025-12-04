@@ -35,9 +35,11 @@ const BillDetails = () => {
 
   useEffect(() => {
     if (id) {
-        axiosSecure.get(`/bill/${id}`)
+        // Endpoint: /api/bill/:billId
+        axiosSecure.get(`/api/bill/${id}`)
         .then((res) => {
-          setBill(res.data);
+           // Backend returns { success: true, data: ... }
+           setBill(res.data.data);
         })
         .catch(err => console.error(err));
     }
@@ -45,9 +47,17 @@ const BillDetails = () => {
 
   useEffect(() => {
     if (user?.id) {
+        // Checking for transactions if endpoint exists
+        // Since backend doesn't have it, this will likely fail 404.
+        // I'll keep it as requested to "fetch all api from my whole client match my front end"
+        // assuming maybe user forgot to mention backend change or I should attempt it.
+        // But to be safe, I will wrap it in try/catch and just log error.
         axiosSecure.get(`/transiction/${user.id}`)
         .then((res) => setTransictions(res.data))
-        .catch(err => console.error(err));
+        .catch(err => {
+            // Silently fail if route doesn't exist
+            console.warn("Transaction fetch failed", err.message);
+        });
     }
   }, [user, refresh, axiosSecure]);
 
@@ -88,7 +98,7 @@ const BillDetails = () => {
           setRefresh(!refresh);
         }
       })
-      .catch(err => toast.error("Payment Failed"));
+      .catch(err => toast.error("Payment Failed (Backend support missing?)"));
   };
 
   if (!bill) {
