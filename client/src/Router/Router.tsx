@@ -31,6 +31,7 @@ const authLoader = async (url: string) => {
   }
 };
 
+
 const ErrorBoundary = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh]">
     <h2 className="text-2xl font-bold text-red-600 mb-2">Something went wrong!</h2>

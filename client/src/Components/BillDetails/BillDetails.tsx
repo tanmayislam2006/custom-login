@@ -91,10 +91,6 @@ const BillDetails = () => {
       payCode,
     };
 
-    // Attempt to post transaction.
-    // If /bill/:id POST was the old way, and backend only has /create, /get, /update, /delete,
-    // then this payment feature is indeed missing in backend.
-    // I will try to call it, but expect failure if backend isn't updated.
     axiosSecure.post(`/bill/${bill._id}`, transictionInformation)
       .then((res) => {
         if (res.data.insertedId || res.data.success) {

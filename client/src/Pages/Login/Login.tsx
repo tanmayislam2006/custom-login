@@ -21,6 +21,7 @@ const Login = () => {
         }
       })
       .catch((err) => console.error(err));
+      .catch((err) => console.log(err));
   };
 
   const handleLogin = (e: FormEvent<HTMLFormElement>) => {
@@ -40,7 +41,10 @@ const Login = () => {
         if (result && result.success) {
           toast.success("Log In successfully");
         } else {
-             toast.error("Log In failed");
+             toast.error("Log In failed")
+          // No need for extra fetch here if backend login handles everything
+        } else {
+             toast.success("Log In successfully")
         }
       })
       .catch((err) => {

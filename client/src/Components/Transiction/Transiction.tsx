@@ -28,6 +28,9 @@ const Transiction = () => {
         .catch((err) => {
             console.warn("Transactions fetch error:", err.message);
         });
+        axiosSecure.get(`/transiction/${uid}`)
+        .then((res) => setAllTransiction(res.data))
+        .catch((err) => console.error(err));
     }
   }, [uid, axiosSecure]);
 

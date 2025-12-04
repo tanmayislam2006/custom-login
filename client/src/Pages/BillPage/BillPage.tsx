@@ -19,7 +19,6 @@ const BillPage = () => {
   const loaderData = useLoaderData() as any;
   // If loader returns null on error
   const initialBillData = Array.isArray(loaderData) ? loaderData : (loaderData?.data || []);
-
   const [allBillData, setAllBillData] = useState<Bill[]>(initialBillData);
   const axiosSecure = useAxiosSecure();
 

@@ -14,6 +14,7 @@ interface Bill {
 const EditBill = () => {
   const loaderData = useLoaderData() as any;
   const bill = (loaderData?.data || loaderData) as Bill;
+  const bill = useLoaderData() as Bill;
   const axiosSecure = useAxiosSecure();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -37,7 +38,6 @@ const EditBill = () => {
   };
 
   if (!bill) return <div>Loading...</div>;
-
   return (
     <div className="max-w-md mx-auto mt-12 bg-white rounded-xl shadow-lg p-8">
       <h2 className="text-2xl font-bold text-center mb-6 text-blue-700">
