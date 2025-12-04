@@ -1,9 +1,12 @@
-import React, { use } from "react";
+import React from "react";
 import { Link, NavLink } from "react-router";
-import Loader from "../Loader/Loader";
-import SmartBillContext from "../../Context/SmartBillContext";
+import { useSmartBill } from "../../Context/SmartBillContext";
+
 const Navbar = () => {
-  const { fireBaseUser, logoutUser,user } = use(SmartBillContext);
+  const { user, logoutUser } = useSmartBill();
+
+  // Changed fireBaseUser to user and fireBaseUser.uid to user.id or user.email
+  // Assuming user has an id. Backend response has id.
 
   const link = (
     <>
@@ -17,16 +20,18 @@ const Navbar = () => {
           Home
         </NavLink>
       </li>
-      <li>
-        <NavLink
-          className={({ isActive }) =>
-            isActive ? "font-bold text-primary underline" : "text-gray-600"
-          }
-          to={`/mybill/${fireBaseUser?.uid}`}
-        >
-          My Bill
-        </NavLink>
-      </li>
+      {user && (
+        <li>
+          <NavLink
+            className={({ isActive }) =>
+              isActive ? "font-bold text-primary underline" : "text-gray-600"
+            }
+            to={`/mybill/${user.id}`}
+          >
+            My Bill
+          </NavLink>
+        </li>
+      )}
       <li>
         <NavLink
           className={({ isActive }) =>
@@ -47,16 +52,16 @@ const Navbar = () => {
           Create Bill
         </NavLink>
       </li>
-      {fireBaseUser && (
+      {user && (
         <>
           <li>
             <NavLink
               className={({ isActive }) =>
                 isActive ? "font-bold text-primary underline" : "text-gray-600"
               }
-              to={`/transiction/${fireBaseUser?.uid}`}
+              to={`/transiction/${user.id}`}
             >
-              Transiction
+              Transaction
             </NavLink>
           </li>
           <li>
@@ -73,11 +78,12 @@ const Navbar = () => {
       )}
     </>
   );
+
   const linkForPopUp = (
     <>
       {" "}
       <li className="font-bold text-xl">Balance : ৳10000 </li>
-      <li>{fireBaseUser?.email}</li>
+      <li>{user?.email}</li>
       <li>
         <Link to="/">Home</Link>
       </li>
@@ -88,12 +94,12 @@ const Navbar = () => {
         <Link to="/myprofile">My Profile</Link>
       </li>
       <li>
-        <Link to="/transiction">Transiction</Link>
+        <Link to="/transiction">Transaction</Link>
       </li>
       <li>
         <Link to="/dashboard">DashBoard</Link>
       </li>
-      {fireBaseUser && (
+      {user && (
         <li>
           <button className="btn" onClick={logoutUser}>
             Log out
@@ -102,6 +108,7 @@ const Navbar = () => {
       )}
     </>
   );
+
   return (
     <nav className="navbar justify-between  bg-base-100 max-w-7xl mx-auto sticky top-0 z-10 shadow-sm">
       <Link to="/" className="flex items-center">
