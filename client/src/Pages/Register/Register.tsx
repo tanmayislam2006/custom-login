@@ -1,12 +1,11 @@
-import React, { use, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import React, { useState, FormEvent, ChangeEvent } from "react";
+import { Link, useNavigate } from "react-router";
 import { FaRegEyeSlash, FaRegEye } from "react-icons/fa";
-import SmartBillContext from "../../Context/SmartBillContext";
+import { useSmartBill } from "../../Context/SmartBillContext";
 import { toast } from "react-toastify";
 
 const Register = () => {
-  const { googleLogIn, createAccount } = use(SmartBillContext);
-  const location = useLocation();
+  const { googleLogIn, createAccount } = useSmartBill();
   const navigate = useNavigate();
   const [passwordError, setPasswordError] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -14,10 +13,10 @@ const Register = () => {
   const handleGoogleLogin = () => {
     googleLogIn()
       .then((result) => console.log(result))
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
     const password = e.target.value;
     if (password.length < 6) {
       setPasswordError("Password must be at least 6 characters long.");
@@ -32,39 +31,41 @@ const Register = () => {
     }
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const { email, password, ...alldata } = Object.fromEntries(
-      formData.entries()
-    );
-    createAccount(email, password)
-      .then((result) => {
-        toast.success(`Account create successfully`);
-        // save information in db
-        const userProfile = {
-          email,
-          ...alldata,
-          creationTime: result.user?.metadata?.creationTime,
-          lastSignInTime: result.user?.metadata?.lastSignInTime,
-        };
-        fetch("http://localhost:4000/register",{
-          method:"POST",
-          headers:{
-            'content-type': "application/json"
-          },
-          body:JSON.stringify(userProfile)
-        }).then(res=>res.json())
-        .then(data=>{
-          console.log(data);
-        })
-      })
-      .catch((err) => toast.error(err.message));
-
     if (passwordError) {
-      toast.error("Invalid Password", passwordError, "error");
+      toast.error(passwordError);
       return;
+    }
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    // We need to match what the backend expects.
+    // Based on `auth.service.ts`: name, email, password, age, phone, address, role
+
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const fullName = formData.get("fullName") as string;
+    // const photoURL = formData.get("photoURL") as string; // Backend doesn't seem to store photoURL in the provided schema
+
+    // Default values for fields not in the form but required by backend or optional
+    const userInfo = {
+        name: fullName,
+        email,
+        password,
+        role: "user", // Default role
+        age: 0, // Placeholder
+        phone: "", // Placeholder
+        address: "" // Placeholder
+    };
+
+    try {
+        const result = await createAccount(userInfo);
+        toast.success(`Account create successfully`);
+        navigate("/login");
+    } catch (err: any) {
+        toast.error(err.response?.data?.message || err.message);
     }
   };
 
@@ -148,6 +149,7 @@ const Register = () => {
               />
 
               <button
+                type="button"
                 onClick={() => setShowPass(!showPass)}
                 className="absolute right-6 bottom-3 cursor-pointer"
               >
@@ -183,7 +185,7 @@ const Register = () => {
           {/* Google Login */}
           <button
             onClick={handleGoogleLogin}
-            type="submit"
+            type="button"
             className="btn bg-white text-black border-[#e5e5e5] w-full"
           >
             <svg

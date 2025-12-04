@@ -1,57 +1,50 @@
-import React, { use, useState } from "react";
+import React, { useState, FormEvent } from "react";
 import { Link, useLocation } from "react-router";
 import { FaRegEyeSlash, FaRegEye } from "react-icons/fa";
-import SmartBillContext from "../../Context/SmartBillContext";
+import { useSmartBill } from "../../Context/SmartBillContext";
 import { toast } from "react-toastify";
 
 const Login = () => {
-  const { googleLogIn, logInAccount } = use(SmartBillContext);
+  const { googleLogIn, logInAccount } = useSmartBill();
   const [email, setEmail] = useState("");
+  // Fixed static password value in original code
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-const location =useLocation()
+  const location = useLocation();
+
   const handleGoogleLogin = () => {
     googleLogIn()
       .then((result) => {
-        const user = result?.user;
-        if (user) {
-          toast.success("Log In successfully");
-          // save information in db
+        // googleLogIn in provider just logs warning for now
+        if (result) {
+            toast.success("Log In successfully");
         }
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
   };
-  const handleLogin = (e) => {
-    e.preventDefault();
-    location.state = location.state || { from: { pathname: "/" } };
-    const form = e.target;
-    const email = form.email.value;
-    const password = form.password.value;
-    logInAccount(email, password)
-      .then((result) => {
-        const user = result?.user;
-        console.log(user?.metadata?.lastSignInTime);
-        if (user) {
-          toast.success("Log In successfully");
-          // update information in db
-          fetch('http://localhost:4000/login',{
-            method:"PATCH",
-            headers:{
-              "content-type":"application/json"
-            },
-            body: JSON.stringify({
-              email: user?.email,
-              lastSignInTime: user?.metadata?.lastSignInTime,
 
-            }),
-          }).then((res) => res.json())
-          .then((data) => {
-            
-          });
+  const handleLogin = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const target = e.target as typeof e.target & {
+      email: { value: string };
+      password: { value: string };
+    };
+
+    // We already have state for email/password, but keeping original logic structure for safety
+    const emailVal = target.email.value;
+    const passwordVal = target.password.value;
+
+    logInAccount(emailVal, passwordVal)
+      .then((result) => {
+        // The provider now handles local storage
+        if (result && result.success) {
+          toast.success("Log In successfully");
+        } else {
+             toast.error("Log In failed");
         }
       })
       .catch((err) => {
-        toast.error(err.message);
+        toast.error(err.response?.data?.message || err.message);
       });
   };
 
@@ -93,14 +86,16 @@ const location =useLocation()
               </label>
               <input
                 type={showPass ? "text" : "password"}
+                name="password"
                 id="password"
                 placeholder="Enter your password"
                 className="w-full px-4 py-2 border border-gray-400 rounded-lg focus:outline-none"
-                value={`123456Aa`}
+                value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <button
+                type="button"
                 onClick={() => setShowPass(!showPass)}
                 className="absolute right-6 bottom-3 cursor-pointer"
               >

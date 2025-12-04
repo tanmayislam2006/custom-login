@@ -1,6 +1,7 @@
-import React, { useState,use } from "react";
-import SmartBillContext from "../../Context/SmartBillContext";
+import React, { useState, ChangeEvent, FormEvent } from "react";
+import { useSmartBill } from "../../Context/SmartBillContext";
 import { toast } from "react-toastify";
+import useAxiosSecure from "../../Utility/AxiosInseptor/AxiosInseptor";
 
 const billTypes = [
   "electricity",
@@ -37,39 +38,39 @@ const organizations = [
 ];
 
 const CreateBillPage = () => {
-      const {fireBaseUser}=use(SmartBillContext)
+  const { user } = useSmartBill();
+  const axiosSecure = useAxiosSecure();
   const [form, setForm] = useState({
     bill_type: "",
     organization: "",
     amount: "",
     due_date: "",
   });
-  const handleChange = (e) => {
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
+    const target = e.currentTarget;
+    const formData = new FormData(target);
     const billInformation = Object.fromEntries(formData.entries());
-    const createdBill ={
-        ...billInformation,
-        uid:fireBaseUser?.uid
-    }
-    // set data on db
-    fetch("http://localhost:4000/createdbill", {
-        method:"POST",
-        headers:{
-          'content-type': "application/json"
-        },
-        body:JSON.stringify(createdBill)
-    })
-      .then((res) => res.json())
-      .then((data) => {
-       if(data.insertedId){
-        toast.success("Bill created successfully");
-       }
+    const createdBill = {
+      ...billInformation,
+      uid: user?.id,
+    };
+
+    // Updated endpoint to /api/bill/create
+    axiosSecure.post("/api/bill/create", createdBill)
+      .then((res) => {
+        if (res.data.success) {
+          toast.success("Bill created successfully");
+        }
+      })
+      .catch(err => {
+          console.error(err);
+          toast.error("Failed to create bill");
       });
 
     setForm({

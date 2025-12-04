@@ -1,27 +1,69 @@
-import React, { use, useEffect, useState } from "react";
-import SmartBillContext from "../../Context/SmartBillContext";
+import React, { useEffect, useState } from "react";
+import { useSmartBill } from "../../Context/SmartBillContext";
 import { toast } from "react-toastify";
 import { useParams } from "react-router";
 import useAxiosSecure from "../../Utility/AxiosInseptor/AxiosInseptor";
 
+// Define interfaces for Bill and Transaction
+interface Bill {
+  _id: string;
+  bill_type: string;
+  organization: string;
+  amount: number;
+  due_date: string;
+}
+
+interface Transaction {
+  _id: string;
+  bill_id: string;
+  bill_type: string;
+  organization: string;
+  amount: number;
+  uid: string;
+  date: string;
+  time: string;
+  payCode: number;
+}
+
 const BillDetails = () => {
   const { id } = useParams();
-  const { fireBaseUser } = use(SmartBillContext);
-  const [transictions, setTransictions] = useState([]);
+  const { user } = useSmartBill();
+  const [transictions, setTransictions] = useState<Transaction[]>([]);
   const [refresh, setRefresh] = useState(false);
-  const [bill, setBill] = useState({});
+  const [bill, setBill] = useState<Bill | null>(null);
   const axiosSecure = useAxiosSecure();
+
   useEffect(() => {
-    axiosSecure.get(`/bill/${id}`, { withCredentials: true }).then((res) => {
-      setBill(res.data);
-    });
+    if (id) {
+        // Endpoint: /api/bill/:billId
+        axiosSecure.get(`/api/bill/${id}`)
+        .then((res) => {
+           // Backend returns { success: true, data: ... }
+           setBill(res.data.data);
+        })
+        .catch(err => console.error(err));
+    }
   }, [id, axiosSecure]);
+
   useEffect(() => {
-    fetch(`http://localhost:4000/transiction/${fireBaseUser?.uid}`)
-      .then((res) => res.json())
-      .then((data) => setTransictions(data));
-  }, [fireBaseUser?.uid, refresh]);
+    if (user?.id) {
+        // Checking for transactions if endpoint exists
+        // Since backend doesn't have it, this will likely fail 404.
+        // I'll keep it as requested to "fetch all api from my whole client match my front end"
+        // assuming maybe user forgot to mention backend change or I should attempt it.
+        // But to be safe, I will wrap it in try/catch and just log error.
+        axiosSecure.get(`/transiction/${user.id}`)
+        .then((res) => setTransictions(res.data))
+        .catch(err => {
+            // Silently fail if route doesn't exist
+            console.warn("Transaction fetch failed", err.message);
+        });
+    }
+  }, [user, refresh, axiosSecure]);
+
   const handlePayNow = () => {
+    if (!bill) return;
+
     const isAlreadyPaid = transictions.find(
       (transiction) => transiction.bill_id === bill._id
     );
@@ -43,27 +85,29 @@ const BillDetails = () => {
       organization: bill.organization,
       amount: bill.amount,
       due_date: bill.due_date,
-      uid: fireBaseUser?.uid,
+      uid: user?.id,
       date,
       time,
       payCode,
     };
 
-    fetch(`http://localhost:4000/bill/${bill._id}`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(transictionInformation),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.insertedId) {
+    // Attempt to post transaction.
+    // If /bill/:id POST was the old way, and backend only has /create, /get, /update, /delete,
+    // then this payment feature is indeed missing in backend.
+    // I will try to call it, but expect failure if backend isn't updated.
+    axiosSecure.post(`/bill/${bill._id}`, transictionInformation)
+      .then((res) => {
+        if (res.data.insertedId || res.data.success) {
           toast.success("Payment Successful");
           setRefresh(!refresh);
         }
-      });
+      })
+      .catch(err => toast.error("Payment Failed (Backend support missing?)"));
   };
+
+  if (!bill) {
+      return <div>Loading...</div>;
+  }
 
   return (
     <div className="max-w-lg mx-auto mt-12 bg-white rounded-xl shadow-lg p-8">

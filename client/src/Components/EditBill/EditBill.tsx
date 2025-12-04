@@ -1,31 +1,42 @@
-import React from "react";
+import React, { FormEvent } from "react";
 import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
+import useAxiosSecure from "../../Utility/AxiosInseptor/AxiosInseptor";
+
+interface Bill {
+  _id: string;
+  bill_type: string;
+  organization: string;
+  amount: number;
+  due_date: string;
+}
 
 const EditBill = () => {
-  const bill = useLoaderData();
+  const loaderData = useLoaderData() as any;
+  const bill = (loaderData?.data || loaderData) as Bill;
+  const axiosSecure = useAxiosSecure();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.currentTarget);
     const updatedBill = Object.fromEntries(formData.entries());
-    // http://localhost:4000
-    fetch(`http://localhost:4000/editbill/${bill._id}`, {
-      method: "PATCH",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(updatedBill),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.modifiedCount) {
+
+    // Endpoint: /api/bill/:billId
+    axiosSecure.put(`/api/bill/${bill._id}`, updatedBill)
+      .then((res) => {
+        if (res.data.success) {
           toast.success("Bill updated successfully");
         } else {
-          toast.error("Failed to update bill");
+             toast.error("Failed to update bill");
         }
+      })
+      .catch(err => {
+          console.error(err);
+          toast.error("Failed to update bill");
       });
   };
+
+  if (!bill) return <div>Loading...</div>;
 
   return (
     <div className="max-w-md mx-auto mt-12 bg-white rounded-xl shadow-lg p-8">
