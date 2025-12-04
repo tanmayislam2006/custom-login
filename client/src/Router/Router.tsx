@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, redirect } from "react-router";
 import MainLayout from "../Layout/MainLayout";
 import Home from "../Pages/Home/Home";
 import Login from "../Pages/Login/Login";
@@ -11,6 +11,24 @@ import Transiction from "../Components/Transiction/Transiction";
 import EditBill from "../Components/EditBill/EditBill";
 import SmartPrivateRoute from "./SmartPrivateRoute";
 import MyProfile from "../Components/MyProfile/MyProfile";
+import axios from "axios";
+
+// Helper function for authenticated loaders
+const authLoader = async (url: string) => {
+  const token = localStorage.getItem("token");
+  try {
+    const response = await axios.get(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Redirect to login if unauthorized
+      return redirect("/login");
+    }
+    throw error;
+  }
+};
 
 // Simple error boundary component
 const ErrorBoundary = () => (
@@ -42,12 +60,7 @@ const router = createBrowserRouter([
             <BillPage />
           </SmartPrivateRoute>
         ),
-        loader: ({ params }) =>
-          fetch(
-            `http://localhost:4000/mybill/${params.uid}`,{
-              credentials:"include"
-            }
-          ),
+        loader: ({ params }) => authLoader(`http://localhost:4000/mybill/${params.uid}`),
         hydrateFallbackElement: <Loader />,
         errorElement: <ErrorBoundary />,
       },
@@ -85,10 +98,7 @@ const router = createBrowserRouter([
             <EditBill />
           </SmartPrivateRoute>
         ),
-        loader: ({ params }) =>
-          fetch(
-            `http://localhost:4000/bill/${params.id}`
-          ),
+        loader: ({ params }) => authLoader(`http://localhost:4000/bill/${params.id}`),
         hydrateFallbackElement: <Loader />,
         errorElement: <ErrorBoundary />,
       },

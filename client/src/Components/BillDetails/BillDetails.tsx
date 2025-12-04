@@ -1,27 +1,59 @@
-import React, { use, useEffect, useState } from "react";
-import SmartBillContext from "../../Context/SmartBillContext";
+import React, { useEffect, useState } from "react";
+import { useSmartBill } from "../../Context/SmartBillContext";
 import { toast } from "react-toastify";
 import { useParams } from "react-router";
 import useAxiosSecure from "../../Utility/AxiosInseptor/AxiosInseptor";
 
+// Define interfaces for Bill and Transaction
+interface Bill {
+  _id: string;
+  bill_type: string;
+  organization: string;
+  amount: number;
+  due_date: string;
+}
+
+interface Transaction {
+  _id: string;
+  bill_id: string;
+  bill_type: string;
+  organization: string;
+  amount: number;
+  uid: string;
+  date: string;
+  time: string;
+  payCode: number;
+}
+
 const BillDetails = () => {
   const { id } = useParams();
-  const { fireBaseUser } = use(SmartBillContext);
-  const [transictions, setTransictions] = useState([]);
+  const { user } = useSmartBill();
+  const [transictions, setTransictions] = useState<Transaction[]>([]);
   const [refresh, setRefresh] = useState(false);
-  const [bill, setBill] = useState({});
+  const [bill, setBill] = useState<Bill | null>(null);
   const axiosSecure = useAxiosSecure();
+
   useEffect(() => {
-    axiosSecure.get(`/bill/${id}`, { withCredentials: true }).then((res) => {
-      setBill(res.data);
-    });
+    if (id) {
+        axiosSecure.get(`/bill/${id}`)
+        .then((res) => {
+          setBill(res.data);
+        })
+        .catch(err => console.error(err));
+    }
   }, [id, axiosSecure]);
+
   useEffect(() => {
-    fetch(`http://localhost:4000/transiction/${fireBaseUser?.uid}`)
-      .then((res) => res.json())
-      .then((data) => setTransictions(data));
-  }, [fireBaseUser?.uid, refresh]);
+    if (user?.id) {
+        axiosSecure.get(`/transiction/${user.id}`)
+        .then((res) => setTransictions(res.data))
+        .catch(err => console.error(err));
+    }
+  }, [user, refresh, axiosSecure]);
+
   const handlePayNow = () => {
+    if (!bill) return;
+
     const isAlreadyPaid = transictions.find(
       (transiction) => transiction.bill_id === bill._id
     );
@@ -43,27 +75,25 @@ const BillDetails = () => {
       organization: bill.organization,
       amount: bill.amount,
       due_date: bill.due_date,
-      uid: fireBaseUser?.uid,
+      uid: user?.id,
       date,
       time,
       payCode,
     };
 
-    fetch(`http://localhost:4000/bill/${bill._id}`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(transictionInformation),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.insertedId) {
+    axiosSecure.post(`/bill/${bill._id}`, transictionInformation)
+      .then((res) => {
+        if (res.data.insertedId || res.data.success) {
           toast.success("Payment Successful");
           setRefresh(!refresh);
         }
-      });
+      })
+      .catch(err => toast.error("Payment Failed"));
   };
+
+  if (!bill) {
+      return <div>Loading...</div>;
+  }
 
   return (
     <div className="max-w-lg mx-auto mt-12 bg-white rounded-xl shadow-lg p-8">
